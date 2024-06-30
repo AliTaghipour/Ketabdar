@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"github.com/dgrijalva/jwt-go"
 	"io"
+	"log"
 	"net/http"
 	"time"
 )
@@ -17,8 +18,10 @@ type Claims struct {
 }
 
 type Handler struct {
-	usersRepo repository.UsersRepository
-	jwtKey    []byte
+	usersRepo     repository.UsersRepository
+	booksRepo     repository.BookRepository
+	userBooksRepo repository.UserBooksRepository
+	jwtKey        []byte
 }
 
 func NewHandler() *Handler {
@@ -94,6 +97,63 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func (h *Handler) AddBook(w http.ResponseWriter, r *http.Request) {
+	_, err := h.authorize(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	req := &model.RequestAddBook{}
+	h.getRequestBody(r.Body, req)
+
+	err = h.booksRepo.AddNewBook(req.Book)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("afarin"))
+	return
+
+}
+
+func (h *Handler) GetBooks(w http.ResponseWriter, r *http.Request) {
+	_, err := h.authorize(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	books, err := h.booksRepo.GetBooks()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	marshal, err := json.Marshal(books)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write(marshal)
+	return
+}
+
+func (h *Handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) AddBookToLibrary(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+func (h *Handler) GetLibraryBooks(writer http.ResponseWriter, request *http.Request) {
+
+}
+
 func (h *Handler) getRequestBody(reader io.ReadCloser, req any) {
 	all, err := io.ReadAll(reader)
 	if err != nil {
@@ -105,14 +165,36 @@ func (h *Handler) getRequestBody(reader io.ReadCloser, req any) {
 	}
 }
 
-func (h *Handler) AddBook(writer http.ResponseWriter, request *http.Request) {
-
+func (h *Handler) authorize(request *http.Request) (int32, error) {
+	token, err := getTokenFromRequest(request)
+	if err != nil {
+		log.Println("fail to get cookie")
+		return 0, err
+	}
+	claims := &Claims{}
+	tkn, err := jwt.ParseWithClaims(token, claims, func(token *jwt.Token) (interface{}, error) {
+		return h.jwtKey, nil
+	})
+	if err != nil {
+		log.Println("bad credentials")
+		return 0, err
+	}
+	err = tkn.Claims.Valid()
+	if err != nil {
+		log.Println("invalid claim")
+		return 0, err
+	}
+	if !tkn.Valid {
+		log.Println("invalid token")
+		return 0, nil
+	}
+	return claims.UserId, nil
 }
 
-func (h *Handler) GetBooks(writer http.ResponseWriter, request *http.Request) {
-
-}
-
-func (h *Handler) UpdateBook(writer http.ResponseWriter, request *http.Request) {
-
+func getTokenFromRequest(request *http.Request) (string, error) {
+	c, err := request.Cookie("token")
+	if err != nil {
+		return "", err
+	}
+	return c.Value, nil
 }

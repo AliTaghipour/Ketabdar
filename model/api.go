@@ -10,3 +10,7 @@ type RequestLogin struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type RequestAddBook struct {
+	Book Book `json:"book"`
+}

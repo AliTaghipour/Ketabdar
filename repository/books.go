@@ -9,6 +9,7 @@ import (
 type BookRepository interface {
 	AddNewBook(book model.Book) error
 	GetBookById(bookId int32) (model.Book, error)
+	GetBooks() ([]model.Book, error)
 }
 
 type BookRepositoryImpl struct {
@@ -17,6 +18,17 @@ type BookRepositoryImpl struct {
 
 	currentId int32
 	idLock    sync.Mutex
+}
+
+func (u *BookRepositoryImpl) GetBooks() ([]model.Book, error) {
+	u.idLock.Lock()
+	defer u.idLock.Unlock()
+
+	var books []model.Book
+	for _, v := range u.data {
+		books = append(books, *v)
+	}
+	return books, nil
 }
 
 func (u *BookRepositoryImpl) AddNewBook(book model.Book) error {
