@@ -14,7 +14,6 @@ func main() {
 	http.HandleFunc("/books", handler.GetBooks)
 	http.HandleFunc("/lib/add_book", handler.AddBookToLibrary)
 	http.HandleFunc("/lib/books", handler.GetLibraryBooks)
-	http.HandleFunc("/lib/update_book", handler.UpdateBook)
 
 	err := http.ListenAndServe(":8080", nil)
 	if err != nil {

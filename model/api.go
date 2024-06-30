@@ -14,3 +14,7 @@ type RequestLogin struct {
 type RequestAddBook struct {
 	Book Book `json:"book"`
 }
+
+type RequestAddBookLibrary struct {
+	UserBook UserBook `json:"user_book"`
+}

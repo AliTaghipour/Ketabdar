@@ -142,16 +142,47 @@ func (h *Handler) GetBooks(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func (h *Handler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) AddBookToLibrary(w http.ResponseWriter, r *http.Request) {
+	userId, err := h.authorize(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+	var req model.RequestAddBookLibrary
+	h.getRequestBody(r.Body, &req)
 
+	err = h.userBooksRepo.AddNewUserBook(&req.UserBook, userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("afarin"))
+	return
 }
 
-func (h *Handler) AddBookToLibrary(writer http.ResponseWriter, request *http.Request) {
+func (h *Handler) GetLibraryBooks(w http.ResponseWriter, r *http.Request) {
+	userId, err := h.authorize(r)
+	if err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
 
-}
+	books, err := h.userBooksRepo.GetUserBooks(userId)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
-func (h *Handler) GetLibraryBooks(writer http.ResponseWriter, request *http.Request) {
+	marshal, err := json.Marshal(books)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 
+	w.WriteHeader(http.StatusOK)
+	w.Write(marshal)
 }
 
 func (h *Handler) getRequestBody(reader io.ReadCloser, req any) {
