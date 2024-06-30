@@ -104,3 +104,15 @@ func (h *Handler) getRequestBody(reader io.ReadCloser, req any) {
 		return
 	}
 }
+
+func (h *Handler) AddBook(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+func (h *Handler) GetBooks(writer http.ResponseWriter, request *http.Request) {
+
+}
+
+func (h *Handler) UpdateBook(writer http.ResponseWriter, request *http.Request) {
+
+}
